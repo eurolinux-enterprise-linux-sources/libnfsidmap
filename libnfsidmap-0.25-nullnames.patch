@@ -1,0 +1,42 @@
+commit 82718594eb8e6afabc572cea2da1caab69e9a720
+Author: Steve Dickson <steved@redhat.com>
+Date:   Thu Apr 30 13:55:32 2015 -0400
+
+    Handle NULL names better
+    
+    Detect when an application passes in NULL names
+    and fail gracefully instead of crashing hard.
+    
+    Signed-off-by: Steve Dickson <steved@redhat.com>
+
+diff --git a/libnfsidmap.c b/libnfsidmap.c
+index 833f94c..a8a9229 100644
+--- a/libnfsidmap.c
++++ b/libnfsidmap.c
+@@ -100,8 +100,11 @@ static char * toupper_str(char *s)
+ 
+ static int id_as_chars(char *name, uid_t *id)
+ {
+-	long int value = strtol(name, NULL, 10);
++	long int value;
+ 
++	if (name == NULL)
++		return 0;
++	value = strtol(name, NULL, 10);
+ 	if (value == 0) {
+ 		/* zero value ids are valid */
+ 		if (strcmp(name, "0") != 0)
+diff --git a/nss.c b/nss.c
+index f8129fe..b3fef5a 100644
+--- a/nss.c
++++ b/nss.c
+@@ -135,6 +135,9 @@ static char *strip_domain(const char *name, const char *domain)
+ 	char *l = NULL;
+ 	int len;
+ 
++	if (name == NULL)
++		goto out;
++
+ 	c = strrchr(name, '@');
+ 	if (c == NULL && domain != NULL)
+ 		goto out;
