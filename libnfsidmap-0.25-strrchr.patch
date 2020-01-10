@@ -1,0 +1,22 @@
+commit 309a89975a50bf53c408233a1bb5b10fd579ca30
+Author: Signed-off-by: Shijoe Panjikkaran <spanjikk@redhat.com>
+Date:   Wed Apr 30 13:19:34 2014 -0400
+
+    nss: use strrchr() instead of strchr() to get the last occurrence of "@"
+    
+    Signed-off-by: Shijoe Panjikkaran <spanjikk@redhat.com>
+    Signed-off-by: Steve Dickson <steved@redhat.com>
+
+diff --git a/nss.c b/nss.c
+index b2b1227..f8129fe 100644
+--- a/nss.c
++++ b/nss.c
+@@ -135,7 +135,7 @@ static char *strip_domain(const char *name, const char *domain)
+ 	char *l = NULL;
+ 	int len;
+ 
+-	c = strchr(name, '@');
++	c = strrchr(name, '@');
+ 	if (c == NULL && domain != NULL)
+ 		goto out;
+ 	if (c == NULL && domain == NULL) {

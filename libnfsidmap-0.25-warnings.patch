@@ -1,0 +1,253 @@
+diff -up libnfsidmap-0.25/configure.ac.orig libnfsidmap-0.25/configure.ac
+--- libnfsidmap-0.25/configure.ac.orig	2014-10-21 10:56:09.384577000 -0400
++++ libnfsidmap-0.25/configure.ac	2014-10-21 10:56:09.382575000 -0400
+@@ -0,0 +1,67 @@
++#                                               -*- Autoconf -*-
++# Process this file with autoconf to produce a configure script.
++
++AC_PREREQ([2.68])
++AC_INIT([libnfsidmap],[0.25],[linux-nfs@vger.kernel.org])
++AC_CONFIG_SRCDIR([nfsidmap.h])
++AC_CONFIG_MACRO_DIR([m4])
++AM_INIT_AUTOMAKE
++LT_INIT
++
++# Checks for programs.
++AC_PROG_CC
++
++# Checks for libraries.
++
++AC_ARG_ENABLE([ldap],
++	[AS_HELP_STRING([--disable-ldap],[Disable support for LDAP @<:@default=detect@:>@])])
++if test "x$enable_ldap" != "xno" ; then
++	AC_CHECK_HEADER([ldap.h],
++		[AC_CHECK_LIB([ldap], [ldap_initialize],
++		              [have_ldap="yes"],[have_ldap="no"])],
++		[have_ldap="no"])
++	if test "x$have_ldap" = "xyes" ; then
++		AC_DEFINE([ENABLE_LDAP], 1, [Enable LDAP Support])
++	elif test "x$enable_ldap$have_ldap" = "xyesno" ; then
++		AC_MSG_ERROR(LDAP support not found!)
++	fi
++fi
++AM_CONDITIONAL(ENABLE_LDAP, test "x$have_ldap" = "xyes")
++
++# Should we build gums mapping library?
++AC_ARG_ENABLE([gums],
++	[AS_HELP_STRING([--enable-gums],[Enable support for the GUMS mapping library @<:@default=false@:>@])])
++if test "x$enable_gums" = "xyes" ; then
++	AC_DEFINE([ENABLE_GUMS], 1, [Enable GUMS mapping library support])
++fi
++AM_CONDITIONAL(ENABLE_GUMS, test "x$enable_gums" = "xyes")
++
++#Where do the Plugins live
++AC_ARG_WITH(pluginpath,
++    [AS_HELP_STRING([--with-pluginpath=/foo],[Causes the library to look in /foo instead of /usr/lib/libnfsidmap for plugins
++    ])],
++    path_plugins=$withval,
++    path_plugins=""
++    )
++if test -n "$path_plugins" ; then
++	AC_DEFINE_UNQUOTED(PATH_PLUGINS, "$path_plugins",
++		[Define this to change the plugins path])
++fi
++AM_CONDITIONAL(PATH_PLUGINS, test -n "$path_plugins")
++
++AC_CONFIG_HEADERS([./config.h])
++# Checks for header files.
++AC_HEADER_STDC
++AC_CHECK_HEADERS([stdlib.h string.h unistd.h errno.h])
++
++# Checks for typedefs, structures, and compiler characteristics.
++AC_TYPE_UID_T
++AC_TYPE_SIZE_T
++
++# Checks for library functions.
++AC_FUNC_MALLOC
++AC_CHECK_FUNCS([strchr strdup])
++
++AC_CONFIG_FILES([Makefile])
++AC_CONFIG_FILES([libnfsidmap.pc])
++AC_OUTPUT
+diff -up libnfsidmap-0.25/configure.in.orig libnfsidmap-0.25/configure.in
+--- libnfsidmap-0.25/configure.in.orig	2011-12-05 15:48:54.000000000 -0500
++++ libnfsidmap-0.25/configure.in	2014-10-21 10:56:09.388579000 -0400
+@@ -1,67 +0,0 @@
+-#                                               -*- Autoconf -*-
+-# Process this file with autoconf to produce a configure script.
+-
+-AC_PREREQ([2.68])
+-AC_INIT([libnfsidmap],[0.25],[linux-nfs@vger.kernel.org])
+-AC_CONFIG_SRCDIR([nfsidmap.h])
+-AC_CONFIG_MACRO_DIR([m4])
+-AM_INIT_AUTOMAKE
+-LT_INIT
+-
+-# Checks for programs.
+-AC_PROG_CC
+-
+-# Checks for libraries.
+-
+-AC_ARG_ENABLE([ldap],
+-	[AS_HELP_STRING([--disable-ldap],[Disable support for LDAP @<:@default=detect@:>@])])
+-if test "x$enable_ldap" != "xno" ; then
+-	AC_CHECK_HEADER([ldap.h],
+-		[AC_CHECK_LIB([ldap], [ldap_initialize],
+-		              [have_ldap="yes"],[have_ldap="no"])],
+-		[have_ldap="no"])
+-	if test "x$have_ldap" = "xyes" ; then
+-		AC_DEFINE([ENABLE_LDAP], 1, [Enable LDAP Support])
+-	elif test "x$enable_ldap$have_ldap" = "xyesno" ; then
+-		AC_MSG_ERROR(LDAP support not found!)
+-	fi
+-fi
+-AM_CONDITIONAL(ENABLE_LDAP, test "x$have_ldap" = "xyes")
+-
+-# Should we build gums mapping library?
+-AC_ARG_ENABLE([gums],
+-	[AS_HELP_STRING([--enable-gums],[Enable support for the GUMS mapping library @<:@default=false@:>@])])
+-if test "x$enable_gums" = "xyes" ; then
+-	AC_DEFINE([ENABLE_GUMS], 1, [Enable GUMS mapping library support])
+-fi
+-AM_CONDITIONAL(ENABLE_GUMS, test "x$enable_gums" = "xyes")
+-
+-#Where do the Plugins live
+-AC_ARG_WITH(pluginpath,
+-    [AS_HELP_STRING([--with-pluginpath=/foo],[Causes the library to look in /foo instead of /usr/lib/libnfsidmap for plugins
+-    ])],
+-    path_plugins=$withval,
+-    path_plugins=""
+-    )
+-if test -n "$path_plugins" ; then
+-	AC_DEFINE_UNQUOTED(PATH_PLUGINS, "$path_plugins",
+-		[Define this to change the plugins path])
+-fi
+-AM_CONDITIONAL(PATH_PLUGINS, test -n "$path_plugins")
+-
+-AC_CONFIG_HEADERS([./config.h])
+-# Checks for header files.
+-AC_HEADER_STDC
+-AC_CHECK_HEADERS([stdlib.h string.h unistd.h errno.h])
+-
+-# Checks for typedefs, structures, and compiler characteristics.
+-AC_TYPE_UID_T
+-AC_TYPE_SIZE_T
+-
+-# Checks for library functions.
+-AC_FUNC_MALLOC
+-AC_CHECK_FUNCS([strchr strdup])
+-
+-AC_CONFIG_FILES([Makefile])
+-AC_CONFIG_FILES([libnfsidmap.pc])
+-AC_OUTPUT
+diff -up libnfsidmap-0.25/libnfsidmap.c.orig libnfsidmap-0.25/libnfsidmap.c
+--- libnfsidmap-0.25/libnfsidmap.c.orig	2014-10-21 10:55:29.626400000 -0400
++++ libnfsidmap-0.25/libnfsidmap.c	2014-10-21 10:56:21.180926000 -0400
+@@ -98,7 +98,7 @@ static char * toupper_str(char *s)
+ 	return s;
+ }
+ 
+-static int id_as_chars(char *name, int *id)
++static int id_as_chars(char *name, uid_t *id)
+ {
+ 	long int value = strtol(name, NULL, 10);
+ 
+@@ -494,7 +494,7 @@ int nfs4_name_to_gid(char *name, gid_t *
+ 	RUN_TRANSLATIONS(name_to_gid, 0, name, gid);
+ }
+ 
+-static int set_id_to_nobody(int *id, int is_uid)
++static int set_id_to_nobody(uid_t *id, uid_t is_uid)
+ {
+ 	int rc = 0;
+ 	const char name[] = "nobody@";
+@@ -504,10 +504,10 @@ static int set_id_to_nobody(int *id, int
+          * configured, before we try to do a full lookup for the
+          * NFS nobody user. */
+ 	if (is_uid && nobody_uid != (uid_t)-1) {
+-		*id = (int)nobody_uid;
++		*id = (uid_t)nobody_uid;
+ 		return 0;
+ 	} else if (!is_uid && nobody_gid != (gid_t)-1) {
+-		*id = (int)nobody_gid;
++		*id = (uid_t)nobody_gid;
+ 		return 0;
+ 	}
+ 
+@@ -542,7 +542,7 @@ int nfs4_group_owner_to_gid(char *name,
+ 	if (rc && id_as_chars(name, gid))
+ 		rc = 0;
+ 	else if (rc)
+-		rc = set_id_to_nobody(gid, 0);
++		rc = set_id_to_nobody((uid_t *)gid, 0);
+ 	return rc;
+ }
+ 
+diff -up libnfsidmap-0.25/static.c.orig libnfsidmap-0.25/static.c
+--- libnfsidmap-0.25/static.c.orig	2014-10-21 10:55:29.588399000 -0400
++++ libnfsidmap-0.25/static.c	2014-10-21 10:56:21.186926000 -0400
+@@ -39,6 +39,7 @@
+ #include <pwd.h>
+ #include <grp.h>
+ #include <errno.h>
++#include <err.h>
+ 
+ #include "queue.h"
+ #include "cfg.h"
+@@ -268,7 +269,6 @@ static int static_name_to_gid(char *name
+ 
+ static int static_uid_to_name(uid_t uid, char *domain, char *name, size_t len)
+ {
+-	struct passwd *pw;
+ 	struct uid_mapping * um;
+ 
+ 	for (um = LIST_FIRST (&uid_mappings[uid_hash (uid)]); um;
+@@ -284,7 +284,6 @@ static int static_uid_to_name(uid_t uid,
+ 
+ static int static_gid_to_name(gid_t gid, char *domain, char *name, size_t len)
+ {
+-	struct group *gr;
+ 	struct gid_mapping * gm;
+ 
+ 	for (gm = LIST_FIRST (&gid_mappings[gid_hash (gid)]); gm;
+@@ -305,7 +304,6 @@ static int static_gid_to_name(gid_t gid,
+ 
+ static int static_init() {	
+ 	int err;
+-	uid_t uid;
+ 	struct conf_list * princ_list = NULL;
+ 	struct conf_list_node * cln, *next;
+ 	struct uid_mapping * unode;
+@@ -367,7 +365,7 @@ static int static_init() {
+ 		next = TAILQ_NEXT (cln, link); 
+ 
+ 		gr = static_getgrnam(cln->field, NULL, &err);
+-		if (!pw) {
++		if (!gr) {
+ 			continue;
+ 		}
+ 		
+@@ -376,19 +374,19 @@ static int static_init() {
+ 		{
+ 			warnx("static_init: calloc (1, %lu) failed",
+ 				(unsigned long)sizeof *gnode);
+-			free(pw);
++			free(gr);
+ 			return -ENOMEM;
+ 		}
+-		gnode->gid = pw->pw_uid;
++		gnode->gid = gr->gr_gid;
+ 		gnode->principal = strdup(cln->field);
+ 
+ 		gnode->localgroup = conf_get_str("Static", cln->field);
+ 		if (!gnode->localgroup) {
+-			free(pw);
++			free(gr);
+ 			return -ENOENT;
+ 		}
+ 
+-		free(pw);
++		free(gr);
+ 
+ 		LIST_INSERT_HEAD (&gid_mappings[gid_hash(gnode->gid)], gnode, link);
+ 	}
