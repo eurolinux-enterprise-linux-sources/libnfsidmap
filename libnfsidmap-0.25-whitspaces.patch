@@ -1,0 +1,148 @@
+diff -up libnfsidmap-0.25/cfg.c.orig libnfsidmap-0.25/cfg.c
+--- libnfsidmap-0.25/cfg.c.orig	2011-12-05 15:28:10.000000000 -0500
++++ libnfsidmap-0.25/cfg.c	2017-11-17 12:01:56.756692437 -0500
+@@ -210,69 +210,98 @@ static void
+ conf_parse_line (int trans, char *line, size_t sz)
+ {
+   char *val;
+-  size_t i;
+-  int j;
++  char *ptr;
+   static char *section = 0;
+   static int ln = 0;
+ 
+   ln++;
+ 
++  /* Strip off any leading blanks */
++  while (isblank(*line))
++    line++;
++
++ 
+   /* Lines starting with '#' or ';' are comments.  */
+   if (*line == '#' || *line == ';')
+     return;
+ 
+   /* '[section]' parsing...  */
+-  if (*line == '[')
+-    {
+-      for (i = 1; i < sz; i++)
+-	if (line[i] == ']')
+-	  break;
+-      if (section)
+-	free (section);
+-      if (i == sz)
+-	{
+-	  warnx("conf_parse_line: %d:"
+-		     "non-matched ']', ignoring until next section", ln);
+-	  section = 0;
+-	  return;
++  if (*line == '[') {
++    line++;
++
++    if (section) free(section);
++
++    while (isblank(*line)) line++;
++
++    /* find the closing ] */
++    ptr = strchr(line, ']');
++
++	if (ptr == NULL) {
++      warnx("conf_parse_line: %d:"
++            "non-matched ']', ignoring until next section", ln);
++      section = NULL;
++      return;
+ 	}
+-      section = malloc (i);
+-      if (!section)
+-	{
+-	  warnx("conf_parse_line: %d: malloc (%lu) failed", ln,
+-		(unsigned long)i);
+-	  return;
++
++    /* just ignore everything after the closing ] */
++    *(ptr--) = '\0';
++
++    /* strip off any blanks before ']' */
++    while (ptr >= line && isblank(*ptr))
++      *(ptr--) = '\0';
++
++    section = strdup(line);
++    if (!section) {
++      warnx("conf_parse_line: %d: malloc failed", ln);
++
+ 	}
+-      strlcpy (section, line + 1, i);
+-      return;
+-    }
++    return;
++  }
+ 
+   /* Deal with assignments.  */
+-  for (i = 0; i < sz; i++)
+-    if (line[i] == '=')
+-      {
+-	/* If no section, we are ignoring the lines.  */
+-	if (!section)
+-	  {
++  ptr = strchr(line, '=');
++
++  /* not an assignment line */
++  if (ptr == NULL) {
++    /* and not just whitespace either, weird */
++    if (line[strspn(line, " \t")])
++      warnx("conf_parse_line: %d: syntax error", ln);
++    return;
++  }
++
++  /* If no section, we are ignoring the lines.  */
++  if (!section) {
+ 	    warnx("conf_parse_line: %d: ignoring line due to no section", ln);
+ 	    return;
+-	  }
+-	line[strcspn (line, " \t=")] = '\0';
+-	val = line + i + 1 + strspn (line + i + 1, " \t");
+-	/* Skip trailing whitespace, if any */
+-	for (j = sz - (val - line) - 1; j > 0 && isspace (val[j]); j--)
+-	  val[j] = '\0';
+-	/* XXX Perhaps should we not ignore errors?  */
+-	conf_set (trans, section, line, val, 0, 0);
+-	return;
+-      }
+-
+-  /* Other non-empty lines are weird.  */
+-  i = strspn (line, " \t");
+-  if (line[i])
+-    warnx("conf_parse_line: %d: syntax error", ln);
++   }
+ 
+-  return;
++  val = ptr + 1;
++  *(ptr--) = '\0';
++
++  /* strip spaces before and after the = */
++  while (ptr >= line && isblank(*ptr))
++      *(ptr--) = '\0';
++  while (*val != '\0' && isblank(*val))
++      val++;
++
++  /* trim any trailing spaces or comments */
++  if ((ptr=strchr(val, '#'))!=NULL) *ptr = '\0';
++  if ((ptr=strchr(val, ';'))!=NULL) *ptr = '\0';
++  ptr = val + strlen(val) - 1;
++  while (ptr > val && isspace(*ptr))
++      *(ptr--) = '\0';
++
++  if (*line == '\0') {
++      warnx("conf_parse_line: %d: missing tag in assignment", ln);
++      return;
++  }
++  if (*val == '\0') {
++      warnx("conf_parse_line: %d: missing value in assignment", ln);
++      return;
++  }
++ 
++  /* XXX Perhaps should we not ignore errors?  */
++  conf_set (trans, section, line, val, 0, 0);
+ }
+ 
+ /* Parse the mapped configuration file.  */

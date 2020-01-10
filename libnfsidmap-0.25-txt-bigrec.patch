@@ -1,0 +1,13 @@
+diff -up libnfsidmap-0.25/libnfsidmap.c.orig libnfsidmap-0.25/libnfsidmap.c
+--- libnfsidmap-0.25/libnfsidmap.c.orig	2017-11-15 10:35:56.897700293 -0500
++++ libnfsidmap-0.25/libnfsidmap.c	2017-11-15 10:38:57.655082342 -0500
+@@ -128,7 +128,8 @@ static int id_as_chars(char *name, uid_t
+ static int dns_txt_query(char *domain, char **nfs4domain)
+ {
+ 	char *txtname = NFS4DNSTXTREC;
+-	char *msg, *answ, *eom, *mptr; 
++	unsigned char *msg, *eom, *mptr; 
++	char *answ;
+ 	int len, status = -1;
+ 	HEADER *hdr;
+ 	

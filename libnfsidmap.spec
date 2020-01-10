@@ -3,7 +3,7 @@
 Summary: NFSv4 User and Group ID Mapping Library
 Name: libnfsidmap
 Version: 0.25
-Release: 17%{?dist}
+Release: 19%{?dist}
 Provides: libnfsidmap
 Obsoletes: nfs-utils-lib
 URL: http://www.citi.umich.edu/projects/nfsv4/linux/
@@ -32,6 +32,11 @@ Patch009: libnfsidmap-0.2-memleak.patch
 Patch010: libnfsidmap-0.25-multidomain.patch
 Patch011: libnfsidmap-0.25-dns-resolved.patch
 Patch012: libnfsidmap-0.25-nssgssprinc.patch
+#
+# RHEL7.5
+#
+Patch013: libnfsidmap-0.25-txt-bigrec.patch
+Patch014: libnfsidmap-0.25-whitspaces.patch
 
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
@@ -83,6 +88,10 @@ developing programs which use the libnfsidmap library.
 %patch011 -p1 
 # 1420352 - Cannot create file in it's directory using kerberos....
 %patch012 -p1 
+# 1498210 - domain lookup by TXT record can crash idmapd if the... 
+%patch013 -p1 
+# 1455923 - Static IP mapping does not allow to map groups with...
+%patch014 -p1 
 
 rm -f configure.in
 
@@ -127,6 +136,13 @@ rm -rf %{buildroot}
 %{_root_libdir}/*.so
 
 %changelog
+* Fri Nov 17 2017 Steve Dickson <steved@redhat.com> 0.25-19
+- Fixed patch for bz 1455923
+
+* Wed Nov 15 2017 Steve Dickson <steved@redhat.com> 0.25-18
+- Enlarge the TXT record to lager than 127 characters (bz 1498210)
+- Allow white spaces in static IP mapping (bz 1455923)
+
 * Fri Feb 17 2017 Steve Dickson <steved@redhat.com> 0.25-17
 - Fixed stripping realm problem in nss_gss_princ routines (bz 1420352)
 
