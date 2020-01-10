@@ -3,7 +3,7 @@
 Summary: NFSv4 User and Group ID Mapping Library
 Name: libnfsidmap
 Version: 0.25
-Release: 15%{?dist}
+Release: 17%{?dist}
 Provides: libnfsidmap
 Obsoletes: nfs-utils-lib
 URL: http://www.citi.umich.edu/projects/nfsv4/linux/
@@ -26,6 +26,12 @@ Patch006: libnfsidmap-0.25-nullnames.patch
 Patch007: libnfsidmap-0.2-stripnewlines.patch
 Patch008: libnfsidmap-0.2-negativerets.patch
 Patch009: libnfsidmap-0.2-memleak.patch
+#
+# RHEL7.4
+#
+Patch010: libnfsidmap-0.25-multidomain.patch
+Patch011: libnfsidmap-0.25-dns-resolved.patch
+Patch012: libnfsidmap-0.25-nssgssprinc.patch
 
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
@@ -71,6 +77,12 @@ developing programs which use the libnfsidmap library.
 # 1271449 - "Covscan test" failures in errata RHBA-2015:20444-05....
 %patch008 -p1 
 %patch009 -p1 
+# 1378557 - NFSv4 id mapping issues in multi-domain environments 
+%patch010 -p1 
+# 980925 - rpc.idmapd should support getting the NFSv4 ID Domains from DNS
+%patch011 -p1 
+# 1420352 - Cannot create file in it's directory using kerberos....
+%patch012 -p1 
 
 rm -f configure.in
 
@@ -115,7 +127,14 @@ rm -rf %{buildroot}
 %{_root_libdir}/*.so
 
 %changelog
-* Wed Aug 17 2016 Steve Dickson <steved@redhat.com> 0.25-14
+* Fri Feb 17 2017 Steve Dickson <steved@redhat.com> 0.25-17
+- Fixed stripping realm problem in nss_gss_princ routines (bz 1420352)
+
+* Tue Jan 10 2017 Steve Dickson <steved@redhat.com> 0.25-16
+- Add options to aid id mapping in multi domain environments (bz 1378557)
+- Query DNS for the the NFSv4 domain (bz 980925)
+
+* Wed Aug 17 2016 Steve Dickson <steved@redhat.com> 0.25-15
 - nss_getpwnam: correctly check for negative values (bz 1271449)
 - Fixed a memory leak in nss_name_to_gid() (bz 1271449)
 
