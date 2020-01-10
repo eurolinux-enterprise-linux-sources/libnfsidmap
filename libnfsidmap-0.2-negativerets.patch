@@ -1,0 +1,34 @@
+diff -up libnfsidmap-0.25/nss.c.save libnfsidmap-0.25/nss.c
+--- libnfsidmap-0.25/nss.c.save	2016-08-17 14:09:18.797550853 -0400
++++ libnfsidmap-0.25/nss.c	2016-08-17 14:09:39.021905256 -0400
+@@ -44,6 +44,7 @@
+ #include <netdb.h>
+ #include <err.h>
+ #include <grp.h>
++#include <limits.h>
+ #include "nfsidmap.h"
+ #include "nfsidmap_internal.h"
+ #include "cfg.h"
+@@ -171,6 +172,9 @@ static struct passwd *nss_getpwnam(const
+ 	char *localname;
+ 	int err = ENOMEM;
+ 
++	if (buflen > UINT_MAX)
++		goto err;
++
+ 	buf = malloc(sizeof(*buf) + buflen);
+ 	if (buf == NULL)
+ 		goto err;
+@@ -236,8 +240,11 @@ static int nss_name_to_gid(char *name, g
+ 	if (!localname)
+ 		goto out;
+ 
++	err = -ENOMEM;
++	if (buflen > UINT_MAX)
++		goto out;
++
+ 	do {
+-		err = -ENOMEM;
+ 		buf = malloc(buflen);
+ 		if (!buf)
+ 			goto out_name;

@@ -3,7 +3,7 @@
 Summary: NFSv4 User and Group ID Mapping Library
 Name: libnfsidmap
 Version: 0.25
-Release: 12%{?dist}
+Release: 15%{?dist}
 Provides: libnfsidmap
 Obsoletes: nfs-utils-lib
 URL: http://www.citi.umich.edu/projects/nfsv4/linux/
@@ -20,6 +20,12 @@ Patch005: libnfsidmap-0.25-warnings.patch
 # RHEL7.2
 #
 Patch006: libnfsidmap-0.25-nullnames.patch
+#
+# RHEL7.3
+#
+Patch007: libnfsidmap-0.2-stripnewlines.patch
+Patch008: libnfsidmap-0.2-negativerets.patch
+Patch009: libnfsidmap-0.2-memleak.patch
 
 Group: System Environment/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
@@ -60,6 +66,12 @@ developing programs which use the libnfsidmap library.
 %patch005 -p1 
 # 1214882 - libnfsidmap: crash due to not checking argument
 %patch006 -p1 
+# 1261124 - libnfsidmap: strip newlines out of IDMAP_LOG messages
+%patch007 -p1 
+# 1271449 - "Covscan test" failures in errata RHBA-2015:20444-05....
+%patch008 -p1 
+%patch009 -p1 
+
 rm -f configure.in
 
 %build
@@ -103,6 +115,14 @@ rm -rf %{buildroot}
 %{_root_libdir}/*.so
 
 %changelog
+* Wed Aug 17 2016 Steve Dickson <steved@redhat.com> 0.25-14
+- nss_getpwnam: correctly check for negative values (bz 1271449)
+- Fixed a memory leak in nss_name_to_gid() (bz 1271449)
+
+* Thu Apr  7 2016 Steve Dickson <steved@redhat.com> 0.25-13
+- Strip newlines out of IDMAP_LOG messages (bz 1261124)
+- Fixed some NEGATIVE_RETURNS that a Covscan scan found (bz 1271449)
+
 * Mon May  4 2015 Steve Dickson <steved@redhat.com> 0.25-12
 - Handle NULL names better (bz 1214882)
 
